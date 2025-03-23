@@ -1,0 +1,26 @@
+name: Run Turtle FX Notifier
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 毎日0時（UTC）→ 日本時間9時
+  workflow_dispatch:      # 手動実行もできる
+
+jobs:
+  run-colab:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        pip install yfinance pandas requests
+
+    - name: Run turtle notifier
+      run: python turtle_fx_notify.py
