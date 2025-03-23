@@ -122,7 +122,7 @@ message = f"""
 send_slack_message(message)
 
 # 必要なライブラリをインストール（初回のみ）
-!pip install yfinance pandas requests
+
 
 # ライブラリ読み込み
 import yfinance as yf
