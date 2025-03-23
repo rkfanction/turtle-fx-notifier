@@ -2,8 +2,8 @@ name: Run Turtle FX Notifier
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # 毎日0時（UTC）→ 日本時間9時
-  workflow_dispatch:      # 手動実行もできる
+    - cron: '0 0 * * *'  # 毎朝9時（日本時間）に実行
+  workflow_dispatch:
 
 jobs:
   run-colab:
@@ -24,3 +24,5 @@ jobs:
 
     - name: Run turtle notifier
       run: python turtle_fx_notify.py
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
