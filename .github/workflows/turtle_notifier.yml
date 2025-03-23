@@ -20,9 +20,10 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install yfinance pandas requests matplotlib
+        pip install yfinance pandas requests matplotlib gspread oauth2client
 
     - name: Run turtle notifier
       run: python turtle_fx_notify.py
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        GOOGLE_SHEET_CREDENTIALS_JSON: ${{ secrets.GOOGLE_SHEET_CREDENTIALS_JSON }}
