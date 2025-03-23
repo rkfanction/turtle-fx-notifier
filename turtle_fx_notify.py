@@ -2,30 +2,35 @@ import yfinance as yf
 import pandas as pd
 import requests
 from datetime import datetime
-import os  # ← 環境変数を読み込むために必要！
+import os
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import json
 
 print("Hello, Turtle!")
 
-# Slack Webhook URL（GitHub Secretsから取得！）
+# Slack Webhook
 SLACK_WEBHOOK_URL = os.environ["SLACK_WEBHOOK_URL"]
 
-# Slackに通知を送る関数
-def send_slack_message(message):
-    payload = {"text": message}
-    response = requests.post(SLACK_WEBHOOK_URL, json=payload)
-    if response.status_code == 200:
-        print("✅ Slack通知を送りました")
-    else:
-        print(f"❌ エラー: {response.status_code}, {response.text}")
+# Googleスプレッドシート認証（SecretsからJSONを取得）
+sheet_json = os.environ["GOOGLE_SHEET_CREDENTIALS_JSON"]
+creds_dict = json.loads(sheet_json)
 
-# 通貨ペア
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+client = gspread.authorize(creds)
+
+# ✅ あなたのスプレッドシートIDとシート名
+SPREADSHEET_ID = "1k-WLklz6SuC2Jv9ON5XsVhNXi9hWjNtbmX_PQi3xqvE"
+worksheet = client.open_by_key(SPREADSHEET_ID).worksheet("turtle_fx_log")
+
+# 通貨ペアと名前
 symbol = "JPY=X"
 name = "USD/JPY"
 
-# データ取得（注意：MultiIndex構造になることがある）
+# データ取得（MultiIndex対応）
 data = yf.download(symbol, period="30d", interval="1d", auto_adjust=True)
 
-# Ticker付きMultiIndexの可能性に対応
 if isinstance(data.columns, pd.MultiIndex):
     close_prices = data["Close"][symbol]
     high_prices = data["High"][symbol]
@@ -39,7 +44,7 @@ else:
 high_20_series = high_prices.rolling(window=20).max()
 low_20_series = low_prices.rolling(window=20).min()
 
-# 最新のデータ行
+# 最新データ取得
 latest_date = close_prices.index[-1]
 close = close_prices.iloc[-1]
 high_20 = high_20_series.iloc[-1]
@@ -53,7 +58,7 @@ elif close < low_20:
 else:
     signal = "⏳ ノーサイン（保留）"
 
-# Slackメッセージの本文
+# Slack通知メッセージ
 message = f"""
 📊 タートルズ戦略通知
 --------------------------
@@ -65,5 +70,21 @@ message = f"""
 📍 シグナル：{signal}
 """
 
-# 通知送信！
+# Slack通知関数
+def send_slack_message(msg):
+    payload = {"text": msg}
+    res = requests.post(SLACK_WEBHOOK_URL, json=payload)
+    print("Slack送信結果:", res.status_code)
+
 send_slack_message(message)
+
+# Googleスプレッドシートに記録
+worksheet.append_row([
+    latest_date.strftime("%Y/%m/%d"),
+    name,
+    round(close, 3),
+    round(high_20, 3),
+    round(low_20, 3),
+    signal
+])
+print("✅ スプレッドシートに記録しました！")
