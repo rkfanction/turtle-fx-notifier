@@ -10,7 +10,7 @@ Original file is located at
 print("Hello, Turtle!")
 
 # 必要なライブラリをインストール（初回だけ必要）
-#!pip install yfinance pandas matplotlib
+
 
 # ライブラリを読み込み
 import yfinance as yf
