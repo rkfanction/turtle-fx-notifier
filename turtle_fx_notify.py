@@ -59,7 +59,7 @@ def send_slack_message(message):
 send_slack_message("📢 テスト通知です！ColabからSlackに送信成功！")
 
 # 必要なライブラリをインストール（初回のみ）
-!pip install yfinance pandas requests
+
 
 # ライブラリ読み込み
 import yfinance as yf
